@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+  <title>APISentry Assessment</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #17243b; background: #edf2f8; }
+    body { max-width: 1100px; margin: auto; padding: 32px 20px; }
+    header { background: #12223c; color: white; padding: 32px; border-radius: 16px; }
+    h1 { margin-top: 0; } h2 { margin-top: 32px; }
+    .summary { display: flex; gap: 16px; flex-wrap: wrap; margin: 24px 0; }
+    .card, article { background: white; border: 1px solid #d9e2ed; border-radius: 12px; padding: 20px; }
+    .card { flex: 1; min-width: 120px; } .count { font-size: 32px; font-weight: bold; }
+    article { margin: 14px 0; border-left: 5px solid #4973a8; }
+    .High { border-left-color: #c53040; } .Medium { border-left-color: #b56b00; }
+    .Low { border-left-color: #2876a6; } .url, li { overflow-wrap: anywhere; }
+    .muted { color: #516178; } header .muted { color: #d3dfef; }
+    dt { font-weight: 650; margin-top: 12px; } dd { margin: 6px 0; }
+    @media print { body { background: white; padding: 0; } article { break-inside: avoid; } }
+  </style>
+</head>
+<body>
+  <header><h1>APISentry</h1><p>Web &amp; API Security Assessment</p>
+    <p class="url">{{ result.target | safe_url }}</p><p class="muted">{{ generated }} · {{ result.requests }} requests</p>
+  </header>
+  <p>Heuristic assessment of same-origin resources. Findings require validation; absence of findings does not establish security. Secret values and URL query values are redacted; paths may still contain sensitive identifiers.</p>
+  <div class="summary">{% for risk in risks %}<div class="card"><div>{{ risk }}</div><div class="count">{{ result.findings | selectattr('risk', 'equalto', risk) | list | length }}</div></div>{% endfor %}</div>
+  {% for risk in risks %}<section><h2>{{ risk }} risk</h2>
+    {% for finding in result.findings if finding.risk == risk %}<article class="{{ risk }}">
+      <h3>{{ finding.title }}</h3><p class="url muted">{{ finding.url | safe_url }}</p>
+      <dl><dt>Evidence</dt><dd>{{ finding.evidence }}</dd><dt>Recommended action</dt><dd>{{ finding.remediation }}</dd></dl>
+    </article>{% else %}<p class="muted">No findings in this category.</p>{% endfor %}
+  </section>{% endfor %}
+  <section><h2>Discovered endpoints</h2><ul>{% for endpoint in result.endpoints %}<li>{{ endpoint | safe_url }}</li>{% else %}<li>No literal API endpoints discovered.</li>{% endfor %}</ul></section>
+  <section><h2>Coverage limitations and request errors</h2><ul>{% for error in result.errors %}<li>{{ error }}</li>{% else %}<li>No transport errors recorded.</li>{% endfor %}</ul></section>
+</body></html>
